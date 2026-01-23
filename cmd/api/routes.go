@@ -25,5 +25,7 @@ func (app *Config) routes() http.Handler {
 
 	r.Post("/", app.Broker)
 
+	r.Post("/handle", app.HandleSubmission)
+
 	return r
 }
