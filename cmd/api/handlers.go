@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
+	"log"
 	"net/http"
 )
 
@@ -96,6 +98,7 @@ func (app *Config) authenticate(w http.ResponseWriter, a AuthPayload) {
 		app.errorJSON(w, err)
 		return
 	}
+	request.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 
@@ -107,11 +110,14 @@ func (app *Config) authenticate(w http.ResponseWriter, a AuthPayload) {
 
 	defer response.Body.Close()
 
-	//make sure we get back correct status code
+	// make sure we get back correct status code
 	if response.StatusCode == http.StatusUnauthorized {
 		app.errorJSON(w, errors.New("invalid credentials"))
 		return
 	} else if response.StatusCode != http.StatusAccepted {
+		// read response body to log the error returned by auth service
+		body, _ := io.ReadAll(response.Body)
+		log.Println("auth service returned status", response.StatusCode, "body:", string(body))
 		app.errorJSON(w, errors.New("error calling auth service"))
 		return
 	}
