@@ -74,7 +74,7 @@ func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 func (app *Config) logItem(w http.ResponseWriter, entry LogPayload) {
 	jsonData, _ := json.MarshalIndent(entry, "", "\t")
 
-	logServiceURL := "http://logger-service/log"
+	logServiceURL := "http://logger-service:80/log"
 
 	request, err := http.NewRequest("POST", logServiceURL, bytes.NewBuffer(jsonData))
 	if err != nil {
@@ -169,7 +169,7 @@ func (app *Config) sendMail(w http.ResponseWriter, msg MailPayload) {
 	jsonData, _ := json.MarshalIndent(msg, "", "\t")
 
 	// call the mail service
-	mailServiceURL := "http://mail-service/send"
+	mailServiceURL := "http://mail-service:80/send"
 
 	// post to mail service
 	request, err := http.NewRequest("POST", mailServiceURL, bytes.NewBuffer(jsonData))
@@ -245,6 +245,7 @@ func (app *Config) logItemViaRPC(w http.ResponseWriter, l LogPayload) {
 	client, err := rpc.Dial("tcp", "logger-service:5001")
 	if err != nil {
 		app.errorJSON(w, err)
+		return
 	}
 
 	rpcPayload := RPCPayload{
@@ -256,6 +257,7 @@ func (app *Config) logItemViaRPC(w http.ResponseWriter, l LogPayload) {
 	err = client.Call("RPCServer.LogInfo", rpcPayload, &result)
 	if err != nil {
 		app.errorJSON(w, err)
+		return
 	}
 
 	payload := jsonResponse{
